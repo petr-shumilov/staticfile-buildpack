@@ -310,6 +310,8 @@ func (sf *Finalizer) ConfigureNginx() error {
 		return err
 	}
 
+	sf.Log.Warning("Nginx configuration: %s", nginxConf)
+
 	confDir := filepath.Join(sf.BuildDir, "nginx", "conf")
 	if err := os.MkdirAll(confDir, 0755); err != nil {
 		return err

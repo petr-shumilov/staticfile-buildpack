@@ -1,7 +1,7 @@
 package finalize
 
 const (
-	initScript = `
+  initScript = `
 # ------------------------------------------------------------------------------------------------
 # Copyright 2013 Jordon Bedwell.
 # Apache License.
@@ -31,18 +31,18 @@ if [[ ! -f $APP_ROOT/nginx/logs/error.log ]]; then
 fi
 `
 
-	startLoggingScript = `
+  startLoggingScript = `
 cat < $APP_ROOT/nginx/logs/access.log &
 (>&2 cat) < $APP_ROOT/nginx/logs/error.log &
 `
 
-	startCommand = `#!/bin/sh
+  startCommand = `#!/bin/sh
 set -ex
 $APP_ROOT/start_logging.sh
 nginx -p $APP_ROOT/nginx -c $APP_ROOT/nginx/conf/nginx.conf
 `
 
-	nginxConfTemplate = `
+  nginxConfTemplate = `
 worker_processes 1;
 daemon off;
 
@@ -77,7 +77,7 @@ http {
     listen <%= ENV["PORT"] %>;
     server_name localhost;
 
-    root <%= ENV["APP_ROOT"] %>/public;
+    #root <%= ENV["APP_ROOT"] %>/public;
 
     {{if .ForceHTTPS}}
       set $updated_host $host;
@@ -103,39 +103,18 @@ http {
 
 
     location / {
-      {{if .PushState}}
-        if (!-e $request_filename) {
-          rewrite ^(.*)$ / break;
-        }
-      {{end}}
-
-        index index.html index.htm Default.htm;
-
-      {{if .DirectoryIndex}}
-        autoindex on;
-        absolute_redirect off;
-      {{end}}
-
-      {{if .BasicAuth}}
-        auth_basic "Restricted";  #For Basic Auth
-        auth_basic_user_file <%= ENV["APP_ROOT"] %>/nginx/conf/.htpasswd;
-      {{end}}
-
-      {{if .SSI}}
-        ssi on;
-      {{end}}
-
-      {{if .HSTS}}
-        add_header Strict-Transport-Security "max-age=31536000{{if .HSTSIncludeSubDomains}}; includeSubDomains{{end}}{{if .HSTSPreload}}; preload{{end}}";
-      {{end}}
+      proxy_pass https://api.cai.tools.sap/connect/v1/;
+      proxy_redirect default;
+      proxy_set_header   Authorization    "293a533fa499bb67ffdb28eda9906f84";
+      proxy_pass_header  Authorization;  
 
       {{if ne .LocationInclude ""}}
         include {{.LocationInclude}};
       {{end}}
 
-			{{ range $code, $value := .StatusCodes }}
-			  error_page {{ $code }} {{ $value }};
-		  {{ end }}
+      {{ range $code, $value := .StatusCodes }}
+        error_page {{ $code }} {{ $value }};
+      {{ end }}
     }
 
     {{if not .HostDotFiles}}
@@ -147,7 +126,7 @@ http {
   }
 }
 `
-	MimeTypes = `
+  MimeTypes = `
 types {
   text/html html htm shtml;
   text/css css;
